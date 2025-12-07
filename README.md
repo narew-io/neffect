@@ -16,7 +16,7 @@ An open source bulk image processing application with effects like dithering, pi
 
 ```bash
 # Clone the repo
-git clone <repo-url>
+git clone https://github.com/narew-io/neffect
 cd neffect
 
 # Install dependencies
