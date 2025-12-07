@@ -1,0 +1,60 @@
+@use "../abstracts" as *;
+
+:root {
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+  --text-4xl: 2.5rem;
+}
+
+// ================================================================
+// ----------------------- TYPOGRAPHY BASE ------------------------
+// ================================================================
+
+/* Global text defaults */
+body {
+  color: $color-foreground;
+  font-size: $text-md;
+  font-family: $font-body;
+  font-weight: $font-weight-regular;
+  line-height: $line-height-regular;
+}
+
+/* Header font family */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: $font-header;
+  font-weight: $font-weight-bold;
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: $text-4xl;
+}
+h2 {
+  font-size: $text-3xl;
+}
+h3 {
+  font-size: $text-2xl;
+}
+h4 {
+  font-size: $text-xl;
+}
+h5 {
+  font-size: $text-lg;
+}
+h6 {
+  font-size: $text-md;
+}
+
+.text-muted {
+  color: $color-foreground-muted;
+}

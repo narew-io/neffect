@@ -1,0 +1,65 @@
+@use "../abstracts" as *;
+
+// ================================================================
+// ----------------------- LAYOUT VARIABLES -----------------------
+// ================================================================
+
+:root {
+  // Responsive Spacing
+  --spacing-x-site: 3rem; // Mobile default
+
+  @include media(">=phone") {
+    --spacing-x-site: 4rem;
+  }
+
+  @include media(">=desktop") {
+    --spacing-x-site: 6rem;
+  }
+
+  // Fluid scaling for large screens
+  @include media(">=large-desktop") {
+    --spacing-x-site: 4vw; // Fluid spacing
+  }
+}
+
+// ================================================================
+// ------------------------ LAYOUT UTILS -------------------------
+// ================================================================
+
+section {
+  padding-inline: $spacing-x-site;
+}
+
+// ================================================================
+// -------------------------- DEBUG GRID --------------------------
+// ================================================================
+
+.layout-grid {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  pointer-events: none;
+  width: 100%;
+  height: 100%;
+
+  display: grid;
+  padding-inline: $spacing-x-site;
+  column-gap: $grid-gutter;
+
+  // Mobile: 6 columns
+  grid-template-columns: repeat(#{$grid-columns-mobile}, 1fr);
+
+  // Desktop: 12 columns
+  @include media(">=tablet") {
+    grid-template-columns: repeat(#{$grid-columns}, 1fr);
+  }
+
+  // Visual styling for optional column children
+  // Usage: <div class="layout-grid"><div class="layout-grid__col"></div> * 12</div>
+  &__col {
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 0, 0, 0.1);
+    border-inline: 1px dashed rgba(255, 0, 0, 0.2);
+  }
+}

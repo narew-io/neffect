@@ -1,0 +1,146 @@
+@use "../abstracts" as *;
+
+// ================================================================
+// -------------------------- HOME PAGE ---------------------------
+// ================================================================
+
+.home {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+
+  /* HEADER */
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid $color-border;
+  }
+
+  &__logo {
+    font-size: $text-xl;
+    font-weight: $font-weight-bold;
+    color: $color-primary;
+  }
+
+  &__tagline {
+    font-size: $text-sm;
+    color: $color-foreground-muted;
+  }
+
+  /* MAIN CONTENT - SPLIT VIEW */
+  &__content {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 400px 1fr;
+
+    @include media("<desktop") {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* LEFT SIDEBAR */
+  &__sidebar {
+    border-right: 1px solid $color-border;
+    padding: 1.5rem;
+    overflow-y: auto;
+    max-height: calc(100vh - 60px);
+
+    @include media("<desktop") {
+      border-right: none;
+      border-bottom: 1px solid $color-border;
+      max-height: none;
+    }
+  }
+
+  &__section-title {
+    font-size: $text-xs;
+    font-weight: $font-weight-semibold;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: $color-foreground-muted;
+    margin-bottom: 1rem;
+  }
+
+  &__effects-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  /* RIGHT PREVIEW */
+  &__preview {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    background: $color-background-elevated;
+  }
+
+  &__preview-header {
+    margin-bottom: 1rem;
+  }
+
+  &__preview-label {
+    font-size: $text-sm;
+    color: $color-foreground-muted;
+  }
+}
+
+// ================================================================
+// ------------------------- EFFECT ITEM --------------------------
+// ================================================================
+
+.effect-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: $color-card;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  text-decoration: none;
+  color: $color-card-foreground;
+  transition: all $transition-normal;
+
+  &:hover,
+  &--active {
+    background: $color-card-hover;
+    border-color: $color-primary;
+    box-shadow: $shadow-md;
+  }
+
+  &__icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+  }
+
+  &__content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__name {
+    font-size: $text-md;
+    font-weight: $font-weight-semibold;
+    margin-bottom: 0.25rem;
+  }
+
+  &__description {
+    font-size: $text-xs;
+    color: $color-foreground-muted;
+    line-height: 1.4;
+  }
+
+  &__arrow {
+    font-size: $text-lg;
+    color: $color-foreground-muted;
+    transition: transform $transition-fast;
+  }
+
+  &:hover &__arrow,
+  &--active &__arrow {
+    transform: translateX(4px);
+    color: $color-primary;
+  }
+}

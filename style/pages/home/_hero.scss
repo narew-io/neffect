@@ -1,0 +1,57 @@
+@use "../../abstracts" as *;
+
+.hero {
+  padding: 0;
+  padding-top: 16rem;
+
+  &__container {
+    @include layout-cols;
+    padding-inline: $spacing-x-site;
+    text-align: center;
+  }
+
+  &__title {
+    @include logo-wordmark;
+    font-size: $text-4xl;
+  }
+
+  &__subtitle {
+    font-size: $text-lg;
+    padding-top: 4rem;
+
+    .hero__cursor {
+      display: inline-block;
+      width: 2px;
+      height: 1em;
+      background-color: currentColor;
+      margin-left: 4px;
+      vertical-align: text-bottom;
+      animation: blink 1s step-end infinite;
+    }
+  }
+
+  &__effect {
+    width: 100%;
+    padding-top: 9rem;
+    aspect-ratio: 7/12;
+    @include media(">phone") {
+      aspect-ratio: 16/7;
+    }
+  }
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+.dither-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}

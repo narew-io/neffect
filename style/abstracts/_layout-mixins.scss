@@ -1,0 +1,64 @@
+@use "tokens" as *;
+@use "sass:math";
+@use "mixins" as *;
+
+// ================================================================
+// ------------------------ LAYOUT SYSTEM -------------------------
+// ================================================================
+
+/* GRID CONFIGURATION */
+$grid-columns: 12;
+$grid-columns-mobile: 6;
+$grid-gutter: 2.5rem;
+
+// ================================================================
+// ----------------------- HELPER FUNCTIONS -----------------------
+// ================================================================
+
+/* Calculate width for N columns */
+@function get-col-width($cols, $total-cols: $grid-columns) {
+  $total-gutters-width: calc((#{$total-cols} - 1) * #{$grid-gutter});
+  $single-col-width: calc((100% - #{$total-gutters-width}) / #{$total-cols});
+
+  @return calc(
+    #{$single-col-width} * #{$cols} + (#{$cols} - 1) * #{$grid-gutter}
+  );
+}
+
+// ================================================================
+// ------------------------- CORE MIXINS --------------------------
+// ================================================================
+
+/* Grid Span - spans N columns in the grid system
+ * Usage: @include layout-cols(8); // Spans 8 columns
+ *        @include layout-cols(); // Spans all columns (12 on desktop, 6 on mobile)
+ */
+@mixin layout-cols($cols: $grid-columns) {
+  margin-inline: auto;
+  width: 100%;
+
+  // Mobile (6 columns)
+  @if $cols > $grid-columns-mobile {
+    max-width: 100%;
+  } @else {
+    max-width: get-col-width($cols, $grid-columns-mobile);
+  }
+
+  // Desktop (12 columns)
+  @include media(">=tablet") {
+    @if $cols == $grid-columns {
+      max-width: #{$container-max-width};
+    } @else {
+      max-width: get-col-width($cols, $grid-columns);
+    }
+  }
+}
+
+/* Grid Auto - responsive grid with auto-fit columns
+ * Usage: @include grid-auto(280px, 2rem);
+ */
+@mixin grid-auto($min-width: 250px, $gap: 2rem) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax($min-width, 1fr));
+  gap: $gap;
+}

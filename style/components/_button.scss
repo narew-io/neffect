@@ -1,0 +1,71 @@
+@use "../abstracts" as *;
+
+// ================================================================
+// --------------------------- BUTTON -----------------------------
+// ================================================================
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: $text-sm;
+  font-weight: $font-weight-medium;
+  border-radius: $radius-md;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all $transition-fast;
+  text-decoration: none;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* PRIMARY */
+  &--primary {
+    background: $color-primary;
+    color: $color-primary-foreground;
+    border-color: $color-primary;
+
+    &:hover:not(:disabled) {
+      background: $color-primary-hover;
+      border-color: $color-primary-hover;
+    }
+  }
+
+  /* SECONDARY */
+  &--secondary {
+    background: $color-secondary;
+    color: $color-secondary-foreground;
+    border-color: $color-border;
+
+    &:hover:not(:disabled) {
+      background: $color-secondary-hover;
+      border-color: $color-border-hover;
+    }
+  }
+
+  /* TEXT */
+  &--text {
+    background: transparent;
+    color: $color-foreground-muted;
+    padding: 0.5rem;
+
+    &:hover:not(:disabled) {
+      color: $color-foreground;
+    }
+  }
+
+  /* SIZES */
+  &--sm {
+    padding: 0.5rem 1rem;
+    font-size: $text-xs;
+  }
+
+  &--lg {
+    padding: 1rem 2rem;
+    font-size: $text-md;
+  }
+}
