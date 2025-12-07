@@ -3,16 +3,17 @@
 // ================================================================
 
 import { useEffect, useState, useRef } from "react";
-import { PREVIEW_CONFIG } from "~/config/preview";
+import { getActiveProfileSettings } from "~/utils/db";
 import type { BaseProcessImage } from "~/core/base-processor";
 
 interface LivePreviewProps {
     processor: BaseProcessImage | null;
     settings: Record<string, unknown> | null;
     showOriginal?: boolean;
+    previewUrl?: string;
 }
 
-export function LivePreview({ processor, settings, showOriginal = false }: LivePreviewProps) {
+export function LivePreview({ processor, settings, showOriginal = false, previewUrl }: LivePreviewProps) {
     const [originalImage, setOriginalImage] = useState<ImageData | null>(null);
     const [processedDataUrl, setProcessedDataUrl] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -20,10 +21,20 @@ export function LivePreview({ processor, settings, showOriginal = false }: LiveP
     const [originalDataUrl, setOriginalDataUrl] = useState<string | null>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
-    // Load original image on mount
+    // Get the preview URL (from prop or settings)
+    const getPreviewUrl = () => {
+        if (previewUrl) return previewUrl;
+        const profileSettings = getActiveProfileSettings();
+        return profileSettings.previewImageUrl;
+    };
+
+    // Load original image on mount or when previewUrl changes
     useEffect(() => {
         const loadImage = async () => {
             setIsLoadingImage(true);
+            setOriginalImage(null);
+            setProcessedDataUrl(null);
+
             try {
                 const img = new Image();
                 img.crossOrigin = "anonymous";
@@ -46,7 +57,7 @@ export function LivePreview({ processor, settings, showOriginal = false }: LiveP
                     setIsLoadingImage(false);
                 };
 
-                img.src = PREVIEW_CONFIG.previewImageUrl;
+                img.src = getPreviewUrl();
             } catch (error) {
                 console.error("Failed to load preview image:", error);
                 setIsLoadingImage(false);
@@ -54,7 +65,7 @@ export function LivePreview({ processor, settings, showOriginal = false }: LiveP
         };
 
         loadImage();
-    }, []);
+    }, [previewUrl]);
 
     // Process image when processor or settings change
     useEffect(() => {

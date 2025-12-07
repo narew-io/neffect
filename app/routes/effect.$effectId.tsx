@@ -13,7 +13,7 @@ import { LivePreview } from "~/components/LivePreview";
 
 export function meta({ params }: Route.MetaArgs) {
     const processor = getProcessor(params.effectId || "");
-    return [{ title: `${processor?.config.name || "Effect"} - neffect` }];
+    return [{ title: `Neffect | ${processor?.config.name || "Effect"} ` }];
 }
 
 type WizardStep = "config" | "upload" | "process";

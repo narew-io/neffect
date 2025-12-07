@@ -1,0 +1,243 @@
+@use "../abstracts" as *;
+
+// ================================================================
+// ---------------------- PROFILE SWITCHER ------------------------
+// ================================================================
+
+.profile-switcher {
+  position: relative;
+
+  &__trigger {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.5rem 0.75rem;
+    background: $color-secondary;
+    border: 1px solid $color-border;
+    border-radius: $radius-md;
+    cursor: pointer;
+    transition: all $transition-fast;
+
+    &:hover {
+      background: $color-secondary-hover;
+      border-color: $color-border-hover;
+    }
+  }
+
+  &__icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: $color-foreground;
+
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  &__chevron {
+    color: $color-foreground-muted;
+  }
+
+  &__dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 0.5rem;
+    min-width: 200px;
+    background: $color-card;
+    border: 1px solid $color-border;
+    border-radius: $radius-lg;
+    box-shadow: $shadow-lg;
+    z-index: 100;
+    overflow: hidden;
+  }
+
+  &__header {
+    padding: 0.75rem 1rem;
+    font-size: $text-xs;
+    font-weight: $font-weight-semibold;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: $color-foreground-muted;
+    border-bottom: 1px solid $color-border;
+  }
+
+  &__list {
+    padding: 0.5rem;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    border-radius: $radius-md;
+    transition: background $transition-fast;
+
+    &:hover {
+      background: $color-secondary;
+    }
+
+    &--active {
+      background: rgba($color-primary, 0.1);
+    }
+  }
+
+  &__item-main {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+    padding: 0.5rem;
+    background: transparent;
+    border: none;
+    border-radius: $radius-sm;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  &__item-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: $color-foreground;
+    flex-shrink: 0;
+
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  &__item-name {
+    flex: 1;
+    font-size: $text-sm;
+    color: $color-foreground;
+  }
+
+  &__item-input {
+    flex: 1;
+    padding: 0.25rem 0.5rem;
+    font-size: $text-sm;
+    background: $color-background;
+    border: 1px solid $color-primary;
+    border-radius: $radius-sm;
+    color: $color-foreground;
+    outline: none;
+    min-width: 0;
+  }
+
+  &__item-actions {
+    display: flex;
+    gap: 0.25rem;
+    opacity: 0;
+    transition: opacity $transition-fast;
+  }
+
+  &__item:hover &__item-actions {
+    opacity: 1;
+  }
+
+  &__item-edit,
+  &__item-delete {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    background: none;
+    border: none;
+    border-radius: $radius-sm;
+    color: $color-foreground-muted;
+    cursor: pointer;
+    transition: all $transition-fast;
+  }
+
+  &__item-edit:hover {
+    background: $color-secondary-hover;
+    color: $color-foreground;
+  }
+
+  &__item-delete:hover {
+    background: $color-destructive;
+    color: white;
+  }
+
+  &__add {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: transparent;
+    border: none;
+    border-top: 1px solid $color-border;
+    color: $color-primary;
+    font-size: $text-sm;
+    cursor: pointer;
+    transition: background $transition-fast;
+
+    &:hover {
+      background: $color-secondary;
+    }
+  }
+
+  &__add-form {
+    padding: 1rem;
+    border-top: 1px solid $color-border;
+  }
+
+  &__add-label {
+    font-size: $text-xs;
+    color: $color-foreground-muted;
+    margin-bottom: 0.75rem;
+  }
+
+  &__icons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  &__icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1;
+    background: $color-secondary;
+    border: 2px solid transparent;
+    border-radius: $radius-md;
+    cursor: pointer;
+    transition: all $transition-fast;
+
+    svg {
+      width: 1.25rem;
+      height: 1.25rem;
+      color: $color-foreground-muted;
+    }
+
+    &:hover {
+      border-color: $color-border-hover;
+
+      svg {
+        color: $color-foreground;
+      }
+    }
+
+    &--active {
+      border-color: $color-primary;
+      background: rgba($color-primary, 0.1);
+
+      svg {
+        color: $color-primary;
+      }
+    }
+  }
+
+  &__add-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+}

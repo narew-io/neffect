@@ -13,6 +13,8 @@
 @use "components/form";
 @use "components/upload";
 @use "components/live-preview";
+@use "components/modal";
+@use "components/profile-switcher";
 
 /* Pages */
 @use "pages/home";
