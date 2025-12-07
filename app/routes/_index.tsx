@@ -117,6 +117,12 @@ export default function HomePage({ loaderData }: Route.ComponentProps) {
         setAppSettings(newSettings);
     }, []);
 
+    // Get preview URL from current state (not from localStorage)
+    const currentPreviewUrl = useMemo(() => {
+        const activeProfile = appSettings.profiles.find(p => p.id === appSettings.activeProfileId);
+        return activeProfile?.settings.previewImageUrl || "";
+    }, [appSettings]);
+
     return (
         <main className="home">
             {/* Header */}
@@ -205,6 +211,7 @@ export default function HomePage({ loaderData }: Route.ComponentProps) {
                         processor={hoveredProcessor}
                         settings={previewSettings}
                         showOriginal={!hoveredProcessor}
+                        previewUrl={currentPreviewUrl}
                     />
                 </div>
             </div>

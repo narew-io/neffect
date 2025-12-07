@@ -50,6 +50,66 @@
   }
 }
 
+// ================================================================
+// ------------------------- UPLOAD URL ---------------------------
+// ================================================================
+
+.upload-url {
+  margin-top: 1.5rem;
+
+  &__divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+
+    &::before,
+    &::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: $color-border;
+    }
+
+    span {
+      font-size: $text-sm;
+      color: $color-foreground-muted;
+      white-space: nowrap;
+    }
+  }
+
+  &__input-group {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  &__input {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    font-size: $text-sm;
+    background: $color-card;
+    border: 1px solid $color-border;
+    border-radius: $radius-md;
+    color: $color-foreground;
+    transition: border-color $transition-fast;
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+    }
+
+    &::placeholder {
+      color: $color-foreground-muted;
+    }
+  }
+
+  &__error {
+    margin-top: 0.5rem;
+    font-size: $text-sm;
+    color: $color-destructive;
+  }
+}
+
 /* UPLOAD PREVIEW */
 .upload-preview {
   margin-top: 2rem;

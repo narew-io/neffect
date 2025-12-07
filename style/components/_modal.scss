@@ -147,6 +147,78 @@
 }
 
 // ================================================================
+// ------------------------ SETTINGS TABS -------------------------
+// ================================================================
+
+.settings-tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: $color-background-elevated;
+  border-radius: $radius-md;
+  margin-bottom: 0.75rem;
+
+  &__tab {
+    flex: 1;
+    padding: 0.5rem 1rem;
+    font-size: $text-sm;
+    background: transparent;
+    border: none;
+    border-radius: $radius-sm;
+    color: $color-foreground-muted;
+    cursor: pointer;
+    transition: all $transition-fast;
+
+    &:hover {
+      color: $color-foreground;
+    }
+
+    &--active {
+      background: $color-card;
+      color: $color-foreground;
+      box-shadow: $shadow-sm;
+    }
+  }
+}
+
+// ================================================================
+// --------------------- SETTINGS FILE UPLOAD ---------------------
+// ================================================================
+
+.settings-file-upload {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  &__input {
+    display: none;
+  }
+
+  &__status {
+    font-size: $text-sm;
+    color: $color-success;
+  }
+}
+
+// ================================================================
+// ----------------------- SETTINGS PREVIEW -----------------------
+// ================================================================
+
+.settings-preview {
+  margin-top: 0.75rem;
+  border-radius: $radius-md;
+  overflow: hidden;
+  border: 1px solid $color-border;
+
+  &__image {
+    width: 100%;
+    max-height: 150px;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+// ================================================================
 // ----------------------- EFFECTS FILTER -------------------------
 // ================================================================
 

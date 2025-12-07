@@ -16,6 +16,9 @@ interface WizardUploadProps {
 
 export function WizardUpload({ files, onFilesChange }: WizardUploadProps) {
     const [isDragging, setIsDragging] = useState(false);
+    const [urlInput, setUrlInput] = useState("");
+    const [isLoadingUrl, setIsLoadingUrl] = useState(false);
+    const [urlError, setUrlError] = useState<string | null>(null);
 
     const handleFiles = useCallback(
         (newFiles: FileList | null) => {
@@ -49,10 +52,44 @@ export function WizardUpload({ files, onFilesChange }: WizardUploadProps) {
         [files, onFilesChange]
     );
 
+    const handleAddFromUrl = useCallback(async () => {
+        if (!urlInput.trim()) return;
+
+        setIsLoadingUrl(true);
+        setUrlError(null);
+
+        try {
+            // Fetch the image
+            const response = await fetch(urlInput);
+            if (!response.ok) throw new Error("Failed to fetch image");
+
+            const blob = await response.blob();
+            if (!blob.type.startsWith("image/")) {
+                throw new Error("URL does not point to an image");
+            }
+
+            // Create a File from the blob
+            const filename = urlInput.split("/").pop()?.split("?")[0] || "image-from-url.jpg";
+            const file = new File([blob], filename, { type: blob.type });
+
+            const uploadedFile: UploadedFile = {
+                file,
+                preview: URL.createObjectURL(blob),
+            };
+
+            onFilesChange([...files, uploadedFile]);
+            setUrlInput("");
+        } catch (error) {
+            setUrlError(error instanceof Error ? error.message : "Failed to load image");
+        } finally {
+            setIsLoadingUrl(false);
+        }
+    }, [urlInput, files, onFilesChange]);
+
     return (
         <div className="wizard-upload">
             <h2 className="wizard-upload__title">Upload Images</h2>
-            <p className="wizard-upload__subtitle">Drag & drop images or click to browse</p>
+            <p className="wizard-upload__subtitle">Add images from your computer or from a URL</p>
 
             {/* Drop Zone */}
             <label
@@ -74,6 +111,32 @@ export function WizardUpload({ files, onFilesChange }: WizardUploadProps) {
                     <span className="upload-zone__hint">Supports: JPG, PNG, WebP, GIF</span>
                 </div>
             </label>
+
+            {/* URL Input */}
+            <div className="upload-url">
+                <div className="upload-url__divider">
+                    <span>or add from URL</span>
+                </div>
+                <div className="upload-url__input-group">
+                    <input
+                        type="url"
+                        className="upload-url__input"
+                        value={urlInput}
+                        onChange={(e) => setUrlInput(e.target.value)}
+                        placeholder="https://example.com/image.jpg"
+                        onKeyDown={(e) => e.key === "Enter" && handleAddFromUrl()}
+                    />
+                    <button
+                        type="button"
+                        className="btn btn--secondary"
+                        onClick={handleAddFromUrl}
+                        disabled={isLoadingUrl || !urlInput.trim()}
+                    >
+                        {isLoadingUrl ? "Loading..." : "Add"}
+                    </button>
+                </div>
+                {urlError && <p className="upload-url__error">{urlError}</p>}
+            </div>
 
             {/* File Preview Grid */}
             {files.length > 0 && (

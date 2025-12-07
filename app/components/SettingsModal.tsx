@@ -2,7 +2,7 @@
 // ----------------------- SETTINGS MODAL -------------------------
 // ================================================================
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getAllProcessors } from "~/core/processors";
 import {
     settingsDb,
@@ -23,6 +23,8 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
     const [appSettings, setAppSettings] = useState<AppSettings>(settingsDb.get);
     const [enabledEffects, setEnabledEffects] = useState<Record<string, boolean>>({});
     const [previewUrl, setPreviewUrl] = useState<string>("");
+    const [previewMode, setPreviewMode] = useState<"url" | "file">("url");
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Initialize from settings
     useEffect(() => {
@@ -84,6 +86,19 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
         setEnabledEffects(none);
     };
 
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Convert file to base64 data URL
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const dataUrl = event.target?.result as string;
+            setPreviewUrl(dataUrl);
+        };
+        reader.readAsDataURL(file);
+    };
+
     if (!isOpen) return null;
 
     const enabledCount = Object.values(enabledEffects).filter(Boolean).length;
@@ -108,15 +123,70 @@ export function SettingsModal({ isOpen, onClose, onSettingsChange }: SettingsMod
                     <section className="settings-section">
                         <h3 className="settings-section__title">Preview Image</h3>
                         <p className="settings-section__description">
-                            URL to the image used for effect previews
+                            Image used for effect previews
                         </p>
-                        <input
-                            type="url"
-                            className="settings-input"
-                            value={previewUrl}
-                            onChange={(e) => setPreviewUrl(e.target.value)}
-                            placeholder="https://example.com/image.jpg"
-                        />
+
+                        {/* Mode Toggle */}
+                        <div className="settings-tabs">
+                            <button
+                                type="button"
+                                className={`settings-tabs__tab ${previewMode === "url" ? "settings-tabs__tab--active" : ""}`}
+                                onClick={() => setPreviewMode("url")}
+                            >
+                                URL
+                            </button>
+                            <button
+                                type="button"
+                                className={`settings-tabs__tab ${previewMode === "file" ? "settings-tabs__tab--active" : ""}`}
+                                onClick={() => setPreviewMode("file")}
+                            >
+                                Upload File
+                            </button>
+                        </div>
+
+                        {previewMode === "url" ? (
+                            <input
+                                type="url"
+                                className="settings-input"
+                                value={previewUrl.startsWith("data:") ? "" : previewUrl}
+                                onChange={(e) => setPreviewUrl(e.target.value)}
+                                placeholder="https://example.com/image.jpg"
+                            />
+                        ) : (
+                            <div className="settings-file-upload">
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleFileUpload}
+                                    className="settings-file-upload__input"
+                                />
+                                <button
+                                    type="button"
+                                    className="btn btn--secondary"
+                                    onClick={() => fileInputRef.current?.click()}
+                                >
+                                    Choose Image
+                                </button>
+                                {previewUrl.startsWith("data:") && (
+                                    <span className="settings-file-upload__status">✓ Image uploaded</span>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Preview Thumbnail */}
+                        {previewUrl && (
+                            <div className="settings-preview">
+                                <img
+                                    src={previewUrl}
+                                    alt="Preview"
+                                    className="settings-preview__image"
+                                    onError={(e) => {
+                                        (e.target as HTMLImageElement).style.display = "none";
+                                    }}
+                                />
+                            </div>
+                        )}
                     </section>
 
                     {/* Effects Filter Section */}
