@@ -1,69 +1,69 @@
 # 🎨 Neffect - Bulk Image Processing
 
-Aplikacja do przetwarzania wielu zdjęć jednocześnie z efektami takimi jak dithering, pixelate, halftone i więcej!
+A bulk image processing application with effects like dithering, pixelate, halftone and more!
 
-## ✨ Funkcje
+## ✨ Features
 
-- **Przetwarzanie wsadowe** - przetwarzaj wiele zdjęć naraz
-- **Live Preview** - podgląd efektu w czasie rzeczywistym
-- **Profile** - różne zestawy ustawień dla różnych projektów
-- **Presety** - gotowe ustawienia dla każdego efektu
-- **Upload z URL** - dodawaj zdjęcia z linku lub z komputera
+- **Batch Processing** - process multiple images at once
+- **Live Preview** - real-time effect preview
+- **Profiles** - different setting sets for different projects
+- **Presets** - ready-made settings for each effect
+- **URL Upload** - add images from links or from your computer
 
-## 🚀 Szybki Start
+## 🚀 Quick Start
 
-### 1. Instalacja
+### 1. Installation
 
 ```bash
-# Sklonuj repo
+# Clone the repo
 git clone <repo-url>
 cd neffect
 
-# Zainstaluj zależności
+# Install dependencies
 npm install
 ```
 
-### 2. Uruchomienie
+### 2. Run
 
 ```bash
 npm run dev
 ```
 
-Otwórz **http://localhost:5173** w przeglądarce.
+Open **http://localhost:5173** in your browser.
 
-## 📖 Jak używać
+## 📖 How to Use
 
-1. **Wybierz efekt** - na stronie głównej kliknij w efekt (np. Dithering)
-2. **Ustaw parametry** - wybierz preset lub dostosuj ręcznie
-3. **Dodaj zdjęcia** - przeciągnij pliki lub wklej URL
-4. **Przetwórz** - kliknij "Process Images"
-5. **Pobierz** - pobierz pojedynczo lub wszystkie naraz
+1. **Select Effect** - on the main page click an effect (e.g., Dithering)
+2. **Set Parameters** - choose a preset or adjust manually
+3. **Add Images** - drag files or paste a URL
+4. **Process** - click "Process Images"
+5. **Download** - download individually or all at once
 
-## 🔧 Dodawanie własnych efektów
+## 🔧 Adding Custom Effects
 
-### Metoda 1: Z pomocą AI (Polecana!)
+### Method 1: With AI (Recommended!)
 
-Wklej do swojego AI (np. Claude, ChatGPT) ten prompt:
+Paste this prompt into your AI (e.g., Claude, ChatGPT):
 
 ```
-Stwórz nowy procesor obrazów dla aplikacji Neffect.
+Create a new image processor for the Neffect application.
 
-Wzoruj się na tym przykładzie (Pixelate):
-[wklej zawartość pliku app/core/processors/pixelate.ts]
+Use this example as reference (Pixelate):
+[paste content of app/core/processors/pixelate.ts]
 
-Stwórz procesor który: [opisz co ma robić Twój efekt]
+Create a processor that: [describe what your effect should do]
 
-Wymagania:
-- Klasa musi rozszerzać BaseProcessImage
-- Musi mieć config (id, name, description, icon)
-- Musi mieć presets (gotowe ustawienia)
-- Musi mieć settings (parametry do regulacji)
-- Funkcja process() przetwarza ImageData
+Requirements:
+- Class must extend BaseProcessImage
+- Must have config (id, name, description, icon)
+- Must have presets (ready-made settings)
+- Must have settings (parameters to adjust)
+- process() function processes ImageData
 ```
 
-### Metoda 2: Ręcznie
+### Method 2: Manually
 
-1. **Stwórz plik** w `app/core/processors/`:
+1. **Create file** in `app/core/processors/`:
 
 ```typescript
 // app/core/processors/my-effect.ts
@@ -73,7 +73,7 @@ export class MyEffectProcessor extends BaseProcessImage {
   config = {
     id: "my-effect",
     name: "My Effect",
-    description: "Opis efektu",
+    description: "Effect description",
     icon: "🎨",
   };
 
@@ -81,7 +81,7 @@ export class MyEffectProcessor extends BaseProcessImage {
     {
       id: "default",
       name: "Default",
-      description: "Domyślne ustawienia",
+      description: "Default settings",
       settings: { intensity: 50 },
     },
   ];
@@ -105,7 +105,7 @@ export class MyEffectProcessor extends BaseProcessImage {
     const intensity = settings.intensity as number;
     const data = imageData.data;
 
-    // Twój kod przetwarzania
+    // Your processing code
     for (let i = 0; i < data.length; i += 4) {
       // data[i] = R, data[i+1] = G, data[i+2] = B, data[i+3] = A
     }
@@ -115,7 +115,7 @@ export class MyEffectProcessor extends BaseProcessImage {
 }
 ```
 
-2. **Zarejestruj procesor** w `app/core/processors/index.ts`:
+2. **Register processor** in `app/core/processors/index.ts`:
 
 ```typescript
 import { MyEffectProcessor } from "./my-effect";
@@ -124,35 +124,35 @@ const PROCESSORS = [
   new DitheringProcessor(),
   new PixelateProcessor(),
   new HalftoneProcessor(),
-  new MyEffectProcessor(), // ← Dodaj tutaj
+  new MyEffectProcessor(), // ← Add here
 ];
 ```
 
-3. Gotowe! Efekt pojawi się na stronie głównej.
+3. Done! The effect will appear on the main page.
 
-## 📁 Struktura projektu
+## 📁 Project Structure
 
 ```
 app/
-├── components/     # Komponenty React
-├── config/         # Konfiguracja
+├── components/     # React components
+├── config/         # Configuration
 ├── core/
-│   ├── base-processor.ts   # Bazowa klasa procesora
-│   └── processors/         # ← Tu dodawaj efekty
-├── routes/         # Strony aplikacji
-└── utils/          # Pomocnicze funkcje
+│   ├── base-processor.ts   # Base processor class
+│   └── processors/         # ← Add effects here
+├── routes/         # Application pages
+└── utils/          # Helper functions
 
-style/              # Style SCSS
+style/              # SCSS styles
 ```
 
-## 🛠 Technologie
+## 🛠 Technologies
 
-- **React Router v7** - routing i SSR
-- **TypeScript** - typowanie
-- **SCSS** - stylowanie
+- **React Router v7** - routing and SSR
+- **TypeScript** - typing
+- **SCSS** - styling
 - **Vite** - bundler
 
-## 📄 Licencja
+## 📄 License
 
 MIT
 
