@@ -1,6 +1,6 @@
 # 🎨 Neffect - Bulk Image Processing
 
-A bulk image processing application with effects like dithering, pixelate, halftone and more!
+An open source bulk image processing application with effects like dithering, pixelate, halftone and more!
 
 ## ✨ Features
 
