@@ -1,5 +1,5 @@
 {
-  "name": "neffect-tool",
+  "name": "neffect",
   "private": true,
   "type": "module",
   "scripts": {
