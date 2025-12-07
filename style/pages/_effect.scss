@@ -172,6 +172,57 @@
     text-transform: none;
     letter-spacing: 0;
   }
+
+  /* COLLAPSIBLE */
+  &--collapsible {
+    background: $color-background-elevated;
+    border: 1px solid $color-border;
+    border-radius: $radius-lg;
+    padding: 0;
+
+    .config-section__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 1rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: background $transition-fast;
+
+      &:hover {
+        background: rgba($color-foreground, 0.03);
+      }
+    }
+
+    .config-section__title {
+      margin-bottom: 0;
+    }
+
+    .config-section__toggle {
+      width: 1.5rem;
+      height: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: $text-lg;
+      font-weight: $font-weight-bold;
+      color: $color-foreground-muted;
+      background: $color-card;
+      border-radius: $radius-sm;
+    }
+
+    .settings-list {
+      padding: 0 1rem 1rem 1rem;
+    }
+  }
+
+  &--expanded {
+    .config-section__toggle {
+      color: $color-primary;
+    }
+  }
 }
 
 // ================================================================

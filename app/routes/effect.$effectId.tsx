@@ -6,7 +6,15 @@ import { useState, useCallback } from "react";
 import { Link, redirect } from "react-router";
 import type { Route } from "./+types/effect.$effectId";
 import { getProcessor } from "~/core/processors";
-import type { BatchProgress, ProcessorPreset } from "~/core/base-processor";
+import {
+    BASE_SETTINGS_DEFINITIONS,
+    getDefaultBaseSettings,
+    applyBaseSettings,
+    type BaseSettings,
+    type BatchProgress,
+    type ProcessorPreset,
+    type SettingDefinition,
+} from "~/core/base-processor";
 import { WizardUpload, type UploadedFile } from "~/components/WizardUpload";
 import { WizardProcess, type ProcessedImage } from "~/components/WizardProcess";
 import { LivePreview } from "~/components/LivePreview";
@@ -32,13 +40,15 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
         throw redirect("/");
     }
 
+    const firstPreset = processor.presets[0];
     return {
         effectId: params.effectId,
         processorConfig: processor.config,
         presets: processor.presets,
         settings: processor.settings,
-        defaultPresetId: processor.presets[0]?.id || null,
-        defaultSettings: processor.presets[0]?.settings || processor.getDefaultSettings(),
+        defaultPresetId: firstPreset?.id || null,
+        defaultSettings: firstPreset?.settings || processor.getDefaultSettings(),
+        defaultBaseSettings: firstPreset?.baseSettings || null,
     };
 }
 
@@ -61,12 +71,16 @@ export function HydrateFallback() {
 type WizardStep = "config" | "upload" | "process";
 
 export default function EffectPage({ loaderData }: Route.ComponentProps) {
-    const { effectId, defaultPresetId, defaultSettings } = loaderData;
+    const { effectId, defaultPresetId, defaultSettings, defaultBaseSettings } = loaderData;
     const processor = getProcessor(effectId || "")!;
 
     const [step, setStep] = useState<WizardStep>("config");
     const [selectedPreset, setSelectedPreset] = useState<string | null>(defaultPresetId);
     const [settings, setSettings] = useState<Record<string, unknown>>(defaultSettings);
+    const [baseSettings, setBaseSettings] = useState<BaseSettings>(
+        defaultBaseSettings ? { ...getDefaultBaseSettings(), ...defaultBaseSettings } : getDefaultBaseSettings()
+    );
+    const [baseSettingsExpanded, setBaseSettingsExpanded] = useState(true);
     const [hoveredPreset, setHoveredPreset] = useState<ProcessorPreset | null>(null);
     const [files, setFiles] = useState<UploadedFile[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -77,7 +91,13 @@ export default function EffectPage({ loaderData }: Route.ComponentProps) {
         (presetId: string) => {
             setSelectedPreset(presetId);
             const preset = processor.getPreset(presetId);
-            if (preset) setSettings(preset.settings);
+            if (preset) {
+                setSettings(preset.settings);
+                // Apply baseSettings from preset if defined
+                if (preset.baseSettings) {
+                    setBaseSettings({ ...getDefaultBaseSettings(), ...preset.baseSettings });
+                }
+            }
         },
         [processor]
     );
@@ -89,6 +109,10 @@ export default function EffectPage({ loaderData }: Route.ComponentProps) {
     const handleSettingChange = useCallback((id: string, value: unknown) => {
         setSettings((prev) => ({ ...prev, [id]: value }));
         setSelectedPreset(null); // Deselect preset when manually changing settings
+    }, []);
+
+    const handleBaseSettingChange = useCallback((id: string, value: unknown) => {
+        setBaseSettings((prev) => ({ ...prev, [id]: value }));
     }, []);
 
     const loadImageData = async (file: File): Promise<ImageData> => {
@@ -132,14 +156,16 @@ export default function EffectPage({ loaderData }: Route.ComponentProps) {
 
             const imageData = await loadImageData(file);
             const processed = await processor.process(imageData, settings);
-            const dataUrl = imageDataToDataUrl(processed);
+            // Apply base settings (opacity)
+            const finalImage = applyBaseSettings(imageData, processed, baseSettings);
+            const dataUrl = imageDataToDataUrl(finalImage);
 
             processedResults.push({ filename: file.name.replace(/\.[^.]+$/, ".png"), dataUrl });
         }
 
         setResults(processedResults);
         setIsProcessing(false);
-    }, [files, processor, settings]);
+    }, [files, processor, settings, baseSettings]);
 
     const handleDownload = useCallback((result: ProcessedImage) => {
         const a = document.createElement("a");
@@ -154,6 +180,9 @@ export default function EffectPage({ loaderData }: Route.ComponentProps) {
 
     // Get preview settings (hovered preset or current settings)
     const previewSettings = hoveredPreset ? hoveredPreset.settings : settings;
+    const previewBaseSettings = hoveredPreset?.baseSettings
+        ? { ...getDefaultBaseSettings(), ...hoveredPreset.baseSettings }
+        : baseSettings;
 
     return (
         <main className="effect-page">
@@ -200,6 +229,60 @@ export default function EffectPage({ loaderData }: Route.ComponentProps) {
                                     </button>
                                 ))}
                             </div>
+                        </section>
+
+                        {/* Base Settings Section (Collapsible) */}
+                        <section className={`config-section config-section--collapsible ${baseSettingsExpanded ? "config-section--expanded" : ""}`}>
+                            <button
+                                type="button"
+                                className="config-section__header"
+                                onClick={() => setBaseSettingsExpanded(!baseSettingsExpanded)}
+                            >
+                                <h2 className="config-section__title">Base Settings</h2>
+                                <span className="config-section__toggle">
+                                    {baseSettingsExpanded ? "−" : "+"}
+                                </span>
+                            </button>
+                            {baseSettingsExpanded && (
+                                <div className="settings-list">
+                                    {BASE_SETTINGS_DEFINITIONS.map((setting: SettingDefinition) => (
+                                        <div key={setting.id} className="setting-item">
+                                            <label className="setting-item__label" htmlFor={setting.id}>
+                                                {setting.label}
+                                            </label>
+
+                                            {setting.type === "range" && (
+                                                <div className="setting-item__range">
+                                                    <input
+                                                        type="range"
+                                                        id={setting.id}
+                                                        min={setting.min}
+                                                        max={setting.max}
+                                                        step={setting.step}
+                                                        value={baseSettings[setting.id] as number}
+                                                        onChange={(e) => handleBaseSettingChange(setting.id, Number(e.target.value))}
+                                                    />
+                                                    <input
+                                                        type="number"
+                                                        className="setting-item__number"
+                                                        min={setting.min}
+                                                        max={setting.max}
+                                                        step={setting.step}
+                                                        value={baseSettings[setting.id] as number}
+                                                        onChange={(e) => {
+                                                            const val = Number(e.target.value);
+                                                            const min = setting.min ?? 0;
+                                                            const max = setting.max ?? 100;
+                                                            const clamped = Math.min(max, Math.max(min, val));
+                                                            handleBaseSettingChange(setting.id, clamped);
+                                                        }}
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </section>
 
                         {/* Settings Section */}
@@ -271,7 +354,7 @@ export default function EffectPage({ loaderData }: Route.ComponentProps) {
                                 {hoveredPreset ? `Preview: ${hoveredPreset.name}` : "Live Preview"}
                             </span>
                         </div>
-                        <LivePreview processor={processor} settings={previewSettings} />
+                        <LivePreview processor={processor} settings={previewSettings} baseSettings={previewBaseSettings} />
                     </div>
                 </div>
             )}

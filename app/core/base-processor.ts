@@ -14,6 +14,7 @@ export interface ProcessorPreset {
   name: string;
   description: string;
   settings: Record<string, unknown>;
+  baseSettings?: Partial<BaseSettings>;
   thumbnail?: string;
 }
 
@@ -27,6 +28,62 @@ export interface SettingDefinition {
   min?: number;
   max?: number;
   step?: number;
+}
+
+// ================================================================
+// ------------------------ BASE SETTINGS -------------------------
+// ================================================================
+
+export interface BaseSettings {
+  /** Transparency of the output image (0-100) */
+  base_opacity: number;
+  [key: string]: unknown;
+}
+
+export const BASE_SETTINGS_DEFINITIONS: SettingDefinition[] = [
+  {
+    id: "base_opacity",
+    type: "range",
+    label: "Opacity",
+    description: "Transparency of the output image",
+    default: 100,
+    min: 0,
+    max: 100,
+    step: 1,
+  },
+];
+
+export const DEFAULT_BASE_SETTINGS: BaseSettings = {
+  base_opacity: 100,
+};
+
+export function getDefaultBaseSettings(): BaseSettings {
+  return { ...DEFAULT_BASE_SETTINGS };
+}
+
+export function applyBaseSettings(
+  _original: ImageData,
+  processed: ImageData,
+  baseSettings: BaseSettings
+): ImageData {
+  const opacity = baseSettings.base_opacity / 100;
+
+  // If opacity is 100%, return processed as-is
+  if (opacity >= 1) return processed;
+
+  // Apply opacity to alpha channel (like Figma)
+  const result = new ImageData(
+    new Uint8ClampedArray(processed.data),
+    processed.width,
+    processed.height
+  );
+
+  for (let i = 0; i < result.data.length; i += 4) {
+    // Multiply alpha channel by opacity
+    result.data[i + 3] = Math.round(processed.data[i + 3] * opacity);
+  }
+
+  return result;
 }
 
 export interface ProcessResult {

@@ -15,7 +15,7 @@ import {
     getActiveProfileSettings,
     type AppSettings
 } from "~/utils/db";
-import type { BaseProcessImage } from "~/core/base-processor";
+import { getDefaultBaseSettings, type BaseProcessImage, type BaseSettings } from "~/core/base-processor";
 
 // ================================================================
 // -------------------------- META --------------------------------
@@ -95,6 +95,7 @@ export default function HomePage({ loaderData }: Route.ComponentProps) {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [hoveredProcessor, setHoveredProcessor] = useState<BaseProcessImage | null>(null);
     const [previewSettings, setPreviewSettings] = useState<Record<string, unknown> | null>(null);
+    const [previewBaseSettings, setPreviewBaseSettings] = useState<BaseSettings | null>(null);
 
     // Filter processors based on settings
     const visibleProcessors = useMemo(() => {
@@ -106,11 +107,18 @@ export default function HomePage({ loaderData }: Route.ComponentProps) {
         setHoveredProcessor(processor);
         const preset = processor.presets[0];
         setPreviewSettings(preset ? preset.settings : getRandomSettings(processor));
+        // Apply baseSettings from preset if available
+        if (preset?.baseSettings) {
+            setPreviewBaseSettings({ ...getDefaultBaseSettings(), ...preset.baseSettings });
+        } else {
+            setPreviewBaseSettings(getDefaultBaseSettings());
+        }
     }, []);
 
     const handleMouseLeave = useCallback(() => {
         setHoveredProcessor(null);
         setPreviewSettings(null);
+        setPreviewBaseSettings(null);
     }, []);
 
     const handleSettingsChange = useCallback((newSettings: AppSettings) => {
@@ -210,6 +218,7 @@ export default function HomePage({ loaderData }: Route.ComponentProps) {
                     <LivePreview
                         processor={hoveredProcessor}
                         settings={previewSettings}
+                        baseSettings={previewBaseSettings}
                         showOriginal={!hoveredProcessor}
                         previewUrl={currentPreviewUrl}
                     />

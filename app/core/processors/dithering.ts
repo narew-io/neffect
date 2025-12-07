@@ -53,6 +53,9 @@ export class DitheringProcessor extends BaseProcessImage {
       id: "blue-default",
       name: "Blue Default",
       description: "Blue on transparent, balanced settings",
+      baseSettings: {
+        base_opacity: 60,
+      },
       settings: {
         palette: "BLUE-ON-TRANSPARENT",
         filter: "ordered",
@@ -67,6 +70,9 @@ export class DitheringProcessor extends BaseProcessImage {
       id: "white-default",
       name: "White Default",
       description: "White on transparent, balanced settings",
+      baseSettings: {
+        base_opacity: 60,
+      },
       settings: {
         palette: "WHITE-ON-TRANSPARENT",
         filter: "ordered",

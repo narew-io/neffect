@@ -4,16 +4,17 @@
 
 import { useEffect, useState, useRef } from "react";
 import { getActiveProfileSettings } from "~/utils/db";
-import type { BaseProcessImage } from "~/core/base-processor";
+import { applyBaseSettings, getDefaultBaseSettings, type BaseProcessImage, type BaseSettings } from "~/core/base-processor";
 
 interface LivePreviewProps {
     processor: BaseProcessImage | null;
     settings: Record<string, unknown> | null;
+    baseSettings?: BaseSettings | null;
     showOriginal?: boolean;
     previewUrl?: string;
 }
 
-export function LivePreview({ processor, settings, showOriginal = false, previewUrl }: LivePreviewProps) {
+export function LivePreview({ processor, settings, baseSettings, showOriginal = false, previewUrl }: LivePreviewProps) {
     const [originalImage, setOriginalImage] = useState<ImageData | null>(null);
     const [processedDataUrl, setProcessedDataUrl] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -88,13 +89,17 @@ export function LivePreview({ processor, settings, showOriginal = false, preview
 
                 const processed = await processor.process(clonedData, settings);
 
+                // Apply base settings (opacity)
+                const currentBaseSettings = baseSettings || getDefaultBaseSettings();
+                const finalImage = applyBaseSettings(clonedData, processed, currentBaseSettings);
+
                 // Convert to data URL
                 const canvas = document.createElement("canvas");
-                canvas.width = processed.width;
-                canvas.height = processed.height;
+                canvas.width = finalImage.width;
+                canvas.height = finalImage.height;
                 const ctx = canvas.getContext("2d");
                 if (ctx) {
-                    ctx.putImageData(processed, 0, 0);
+                    ctx.putImageData(finalImage, 0, 0);
                     setProcessedDataUrl(canvas.toDataURL("image/png"));
                 }
             } catch (error) {
@@ -105,7 +110,7 @@ export function LivePreview({ processor, settings, showOriginal = false, preview
         };
 
         processImage();
-    }, [originalImage, processor, settings, showOriginal, originalDataUrl]);
+    }, [originalImage, processor, settings, baseSettings, showOriginal, originalDataUrl]);
 
     // Show skeleton loader while loading or processing
     const showSkeleton = isLoadingImage || (isProcessing && !processedDataUrl);
