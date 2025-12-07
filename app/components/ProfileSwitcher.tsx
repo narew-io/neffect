@@ -10,7 +10,6 @@ import {
     deleteProfile,
     setActiveProfile,
     createProfile,
-    DEFAULT_PROFILE_SETTINGS,
     type Profile,
     type AppSettings
 } from "~/utils/db";

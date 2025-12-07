@@ -2,9 +2,9 @@
 // -------------------------- HOME PAGE ---------------------------
 // ================================================================
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useMemo } from "react";
 import type { Route } from "./+types/_index";
-import { Link } from "react-router";
+import { Link, useRevalidator } from "react-router";
 import { getAllProcessors } from "~/core/processors";
 import { LivePreview } from "~/components/LivePreview";
 import { SettingsModal } from "~/components/SettingsModal";
@@ -17,12 +17,52 @@ import {
 } from "~/utils/db";
 import type { BaseProcessImage } from "~/core/base-processor";
 
+// ================================================================
+// -------------------------- META --------------------------------
+// ================================================================
+
 export function meta({ }: Route.MetaArgs) {
     return [
         { title: "Neffect | Bulk Image Processing" },
         { name: "description", content: "Open source bulk image processing with effects like dithering" },
     ];
 }
+
+// ================================================================
+// ----------------------- CLIENT LOADER --------------------------
+// ================================================================
+
+export async function clientLoader() {
+    // Load settings from localStorage
+    const settings = settingsDb.get();
+    const processors = getAllProcessors();
+
+    return {
+        settings,
+        processors: processors.map(p => ({
+            id: p.config.id,
+            name: p.config.name,
+            description: p.config.description,
+            icon: p.config.icon,
+        })),
+    };
+}
+
+// HydrateFallback is shown while clientLoader runs on initial load
+export function HydrateFallback() {
+    return (
+        <main className="home">
+            <div className="home__loading">
+                <div className="home__loading-spinner" />
+                <p>Loading...</p>
+            </div>
+        </main>
+    );
+}
+
+// ================================================================
+// ----------------------- HELPER FUNCTIONS -----------------------
+// ================================================================
 
 function getRandomSettings(processor: BaseProcessImage): Record<string, unknown> {
     const settings: Record<string, unknown> = {};
@@ -42,17 +82,19 @@ function getRandomSettings(processor: BaseProcessImage): Record<string, unknown>
     return settings;
 }
 
-export default function HomePage() {
+// ================================================================
+// ------------------------- COMPONENT ----------------------------
+// ================================================================
+
+export default function HomePage({ loaderData }: Route.ComponentProps) {
+    const { settings: initialSettings } = loaderData;
     const allProcessors = getAllProcessors();
-    const [appSettings, setAppSettings] = useState<AppSettings | null>(null);
+    const revalidator = useRevalidator();
+
+    const [appSettings, setAppSettings] = useState<AppSettings>(initialSettings);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [hoveredProcessor, setHoveredProcessor] = useState<BaseProcessImage | null>(null);
     const [previewSettings, setPreviewSettings] = useState<Record<string, unknown> | null>(null);
-
-    // Load settings on mount
-    useEffect(() => {
-        setAppSettings(settingsDb.get());
-    }, []);
 
     // Filter processors based on settings
     const visibleProcessors = useMemo(() => {

@@ -2,6 +2,7 @@
 // ----------------------- WIZARD PROCESS -------------------------
 // ================================================================
 
+import { useState } from "react";
 import type { BatchProgress } from "~/core/base-processor";
 
 export interface ProcessedImage {
@@ -18,6 +19,8 @@ interface WizardProcessProps {
 }
 
 export function WizardProcess({ isProcessing, progress, results, onDownload, onDownloadAll }: WizardProcessProps) {
+    const [previewImage, setPreviewImage] = useState<ProcessedImage | null>(null);
+
     return (
         <div className="wizard-process">
             <h2 className="wizard-process__title">{isProcessing ? "Processing..." : "Complete!"}</h2>
@@ -53,7 +56,12 @@ export function WizardProcess({ isProcessing, progress, results, onDownload, onD
                     <div className="process-results__grid">
                         {results.map((result, index) => (
                             <div key={index} className="result-item">
-                                <img src={result.dataUrl} alt={result.filename} className="result-item__preview" />
+                                <img
+                                    src={result.dataUrl}
+                                    alt={result.filename}
+                                    className="result-item__preview"
+                                    onClick={() => setPreviewImage(result)}
+                                />
                                 <div className="result-item__info">
                                     <span className="result-item__name">{result.filename}</span>
                                     <button type="button" className="btn btn--sm" onClick={() => onDownload(result)}>
@@ -62,6 +70,36 @@ export function WizardProcess({ isProcessing, progress, results, onDownload, onD
                                 </div>
                             </div>
                         ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Image Preview Modal */}
+            {previewImage && (
+                <div className="image-preview-modal" onClick={() => setPreviewImage(null)}>
+                    <div className="image-preview-modal__content" onClick={(e) => e.stopPropagation()}>
+                        <button
+                            type="button"
+                            className="image-preview-modal__close"
+                            onClick={() => setPreviewImage(null)}
+                        >
+                            ✕
+                        </button>
+                        <img
+                            src={previewImage.dataUrl}
+                            alt={previewImage.filename}
+                            className="image-preview-modal__image"
+                        />
+                        <div className="image-preview-modal__footer">
+                            <span className="image-preview-modal__name">{previewImage.filename}</span>
+                            <button
+                                type="button"
+                                className="btn btn--primary btn--sm"
+                                onClick={() => onDownload(previewImage)}
+                            >
+                                Download
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

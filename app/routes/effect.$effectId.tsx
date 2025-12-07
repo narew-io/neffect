@@ -3,7 +3,7 @@
 // ================================================================
 
 import { useState, useCallback } from "react";
-import { Link, useParams } from "react-router";
+import { Link, redirect } from "react-router";
 import type { Route } from "./+types/effect.$effectId";
 import { getProcessor } from "~/core/processors";
 import type { BatchProgress, ProcessorPreset } from "~/core/base-processor";
@@ -11,38 +11,67 @@ import { WizardUpload, type UploadedFile } from "~/components/WizardUpload";
 import { WizardProcess, type ProcessedImage } from "~/components/WizardProcess";
 import { LivePreview } from "~/components/LivePreview";
 
+// ================================================================
+// -------------------------- META --------------------------------
+// ================================================================
+
 export function meta({ params }: Route.MetaArgs) {
     const processor = getProcessor(params.effectId || "");
-    return [{ title: `Neffect | ${processor?.config.name || "Effect"} ` }];
+    return [{ title: `Neffect | ${processor?.config.name || "Effect"}` }];
 }
+
+// ================================================================
+// ----------------------- CLIENT LOADER --------------------------
+// ================================================================
+
+export async function clientLoader({ params }: Route.ClientLoaderArgs) {
+    const processor = getProcessor(params.effectId || "");
+
+    if (!processor) {
+        // Redirect to home if processor not found
+        throw redirect("/");
+    }
+
+    return {
+        effectId: params.effectId,
+        processorConfig: processor.config,
+        presets: processor.presets,
+        settings: processor.settings,
+        defaultPresetId: processor.presets[0]?.id || null,
+        defaultSettings: processor.presets[0]?.settings || processor.getDefaultSettings(),
+    };
+}
+
+// HydrateFallback is shown while clientLoader runs
+export function HydrateFallback() {
+    return (
+        <main className="effect-page">
+            <div className="effect-page__loading">
+                <div className="effect-page__loading-spinner" />
+                <p>Loading effect...</p>
+            </div>
+        </main>
+    );
+}
+
+// ================================================================
+// ------------------------- COMPONENT ----------------------------
+// ================================================================
 
 type WizardStep = "config" | "upload" | "process";
 
-export default function EffectPage() {
-    const { effectId } = useParams();
-    const processor = getProcessor(effectId || "");
+export default function EffectPage({ loaderData }: Route.ComponentProps) {
+    const { effectId, defaultPresetId, defaultSettings } = loaderData;
+    const processor = getProcessor(effectId || "")!;
 
     const [step, setStep] = useState<WizardStep>("config");
-    const [selectedPreset, setSelectedPreset] = useState<string | null>(processor?.presets[0]?.id || null);
-    const [settings, setSettings] = useState<Record<string, unknown>>(
-        processor?.presets[0]?.settings || processor?.getDefaultSettings() || {}
-    );
+    const [selectedPreset, setSelectedPreset] = useState<string | null>(defaultPresetId);
+    const [settings, setSettings] = useState<Record<string, unknown>>(defaultSettings);
     const [hoveredPreset, setHoveredPreset] = useState<ProcessorPreset | null>(null);
     const [files, setFiles] = useState<UploadedFile[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);
     const [progress, setProgress] = useState<BatchProgress | null>(null);
     const [results, setResults] = useState<ProcessedImage[]>([]);
-
-    if (!processor) {
-        return (
-            <main className="effect-page">
-                <div className="effect-page__error">
-                    <h1>Effect not found</h1>
-                    <Link to="/" className="btn btn--secondary">Back to Home</Link>
-                </div>
-            </main>
-        );
-    }
 
     const handlePresetSelect = useCallback(
         (presetId: string) => {
@@ -197,7 +226,21 @@ export default function EffectPage() {
                                                     value={settings[setting.id] as number}
                                                     onChange={(e) => handleSettingChange(setting.id, Number(e.target.value))}
                                                 />
-                                                <span className="setting-item__value">{settings[setting.id] as number}</span>
+                                                <input
+                                                    type="number"
+                                                    className="setting-item__number"
+                                                    min={setting.min}
+                                                    max={setting.max}
+                                                    step={setting.step}
+                                                    value={settings[setting.id] as number}
+                                                    onChange={(e) => {
+                                                        const val = Number(e.target.value);
+                                                        const min = setting.min ?? 0;
+                                                        const max = setting.max ?? 100;
+                                                        const clamped = Math.min(max, Math.max(min, val));
+                                                        handleSettingChange(setting.id, clamped);
+                                                    }}
+                                                />
                                             </div>
                                         )}
 
