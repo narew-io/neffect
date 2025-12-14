@@ -3,11 +3,12 @@
 // ================================================================
 
 import {
-  BaseProcessImage,
+  BaseWasmProcessor,
   type ProcessorConfig,
   type ProcessorPreset,
   type SettingDefinition,
 } from "../base-processor";
+import { wasmHalftone } from "../wasm-processor";
 
 /* TYPES */
 type HalftoneShape = "circle" | "square" | "diamond";
@@ -20,7 +21,7 @@ const COLORS: Record<HalftoneColor, [number, number, number, number]> = {
   CUSTOM: [0, 0, 0, 255],
 };
 
-export class HalftoneProcessor extends BaseProcessImage {
+export class HalftoneProcessor extends BaseWasmProcessor {
   readonly config: ProcessorConfig = {
     id: "halftone",
     name: "Halftone",
@@ -140,7 +141,33 @@ export class HalftoneProcessor extends BaseProcessImage {
     },
   ];
 
-  async process(
+  // ================================================================
+  // ------------------------- WASM PROCESSING -----------------------
+  // ================================================================
+
+  processWasm(
+    imageData: ImageData,
+    settings: Record<string, unknown>
+  ): ImageData {
+    const dotSize = Math.max(2, Math.round((settings.dotSize as number) || 6));
+    const spacing = Math.max(3, Math.round((settings.spacing as number) || 8));
+    const colorKey = (settings.color as HalftoneColor) || "BLACK";
+    const backgroundKey = (settings.background as string) || "WHITE";
+
+    const dotColor = COLORS[colorKey];
+    const bgColor =
+      backgroundKey === "TRANSPARENT"
+        ? ([0, 0, 0, 0] as [number, number, number, number])
+        : COLORS[backgroundKey as HalftoneColor] || COLORS.WHITE;
+
+    return wasmHalftone(imageData, { dotSize, spacing, dotColor, bgColor });
+  }
+
+  // ================================================================
+  // -------------------------- JS PROCESSING ------------------------
+  // ================================================================
+
+  async processJs(
     imageData: ImageData,
     settings: Record<string, unknown>
   ): Promise<ImageData> {
@@ -152,14 +179,16 @@ export class HalftoneProcessor extends BaseProcessImage {
     const angle = ((settings.angle as number) || 45) * (Math.PI / 180);
 
     const { width, height, data } = imageData;
+
+    const dotColor = COLORS[colorKey];
+    const bgColor =
+      backgroundKey === "TRANSPARENT"
+        ? ([0, 0, 0, 0] as [number, number, number, number])
+        : COLORS[backgroundKey as HalftoneColor] || COLORS.WHITE;
+
     const result = new Uint8ClampedArray(width * height * 4);
 
     // Fill background
-    const bgColor =
-      backgroundKey === "TRANSPARENT"
-        ? [0, 0, 0, 0]
-        : COLORS[backgroundKey as HalftoneColor] || COLORS.WHITE;
-
     for (let i = 0; i < result.length; i += 4) {
       result[i] = bgColor[0];
       result[i + 1] = bgColor[1];
@@ -167,34 +196,26 @@ export class HalftoneProcessor extends BaseProcessImage {
       result[i + 3] = bgColor[3];
     }
 
-    const dotColor = COLORS[colorKey];
     const cosA = Math.cos(angle);
     const sinA = Math.sin(angle);
 
-    // Calculate grid size to cover rotated image
     const maxDim = Math.sqrt(width * width + height * height);
     const gridCols = Math.ceil(maxDim / spacing) + 2;
     const gridRows = Math.ceil(maxDim / spacing) + 2;
 
-    // Center offset for rotation
     const cx = width / 2;
     const cy = height / 2;
 
-    // Process each grid cell
     for (let gy = -gridRows / 2; gy < gridRows / 2; gy++) {
       for (let gx = -gridCols / 2; gx < gridCols / 2; gx++) {
-        // Grid position in rotated space
         const rx = gx * spacing;
         const ry = gy * spacing;
 
-        // Transform back to image space
         const px = cx + rx * cosA - ry * sinA;
         const py = cy + rx * sinA + ry * cosA;
 
-        // Skip if outside image
         if (px < 0 || px >= width || py < 0 || py >= height) continue;
 
-        // Sample brightness at this point (average of small area)
         const brightness = this.sampleBrightness(
           data,
           width,
@@ -203,13 +224,10 @@ export class HalftoneProcessor extends BaseProcessImage {
           py,
           spacing / 2
         );
-
-        // Calculate dot radius based on brightness (darker = bigger dot)
         const radius = ((255 - brightness) / 255) * (dotSize / 2);
 
         if (radius < 0.5) continue;
 
-        // Draw the dot
         this.drawDot(result, width, height, px, py, radius, shape, dotColor);
       }
     }

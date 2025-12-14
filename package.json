@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "react-router build",
+    "build": "npm run build:wasm && react-router build",
+    "build:wasm": "cd wasm && npm run asbuild && cd .. && xcopy /Y wasm\\build\\release.wasm public\\wasm\\",
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc"
@@ -21,6 +22,7 @@
     "@types/node": "^22",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
+    "assemblyscript": "^0.28.9",
     "include-media": "^2.0.0",
     "sass": "^1.83.0",
     "typescript": "^5.9.2",

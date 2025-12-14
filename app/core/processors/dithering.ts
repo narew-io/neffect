@@ -3,11 +3,12 @@
 // ================================================================
 
 import {
-  BaseProcessImage,
+  BaseWasmProcessor,
   type ProcessorConfig,
   type ProcessorPreset,
   type SettingDefinition,
 } from "../base-processor";
+import { wasmOrderedDither } from "../wasm-processor";
 
 /* TYPES */
 type DitherFilter = "ordered" | "none";
@@ -26,12 +27,12 @@ const BAYER_DIVISOR = 16;
 /* PALETTE DEFINITIONS */
 const PALETTES: Record<PaletteName, RGBA[]> = {
   "BLUE-ON-TRANSPARENT": [
-    [0, 0, 0, 0], // Transparent (Dark)
-    [59, 130, 245, 255], // Blue (Bright)
+    [0, 0, 0, 0],
+    [59, 130, 245, 255],
   ],
   "WHITE-ON-TRANSPARENT": [
-    [0, 0, 0, 0], // Transparent (Dark)
-    [255, 255, 255, 255], // White (Bright)
+    [0, 0, 0, 0],
+    [255, 255, 255, 255],
   ],
 };
 
@@ -39,7 +40,7 @@ const PALETTES: Record<PaletteName, RGBA[]> = {
 // --------------------- DITHERING PROCESSOR ----------------------
 // ================================================================
 
-export class DitheringProcessor extends BaseProcessImage {
+export class DitheringProcessor extends BaseWasmProcessor {
   readonly config: ProcessorConfig = {
     id: "dithering",
     name: "Dithering",
@@ -161,53 +162,102 @@ export class DitheringProcessor extends BaseProcessImage {
     },
   ];
 
-  async process(
+  // ================================================================
+  // ------------------------- WASM PROCESSING -----------------------
+  // ================================================================
+
+  processWasm(
+    imageData: ImageData,
+    settings: Record<string, unknown>
+  ): ImageData {
+    const {
+      workingData,
+      originalWidth,
+      originalHeight,
+      paletteColors,
+      brightness,
+      contrast,
+    } = this.prepareData(imageData, settings);
+
+    const result = wasmOrderedDither(workingData, {
+      palette: paletteColors,
+      grainSize: 1,
+      brightness,
+      contrast,
+    });
+
+    return this.resizeImageNearest(result, originalWidth, originalHeight);
+  }
+
+  // ================================================================
+  // -------------------------- JS PROCESSING ------------------------
+  // ================================================================
+
+  async processJs(
     imageData: ImageData,
     settings: Record<string, unknown>
   ): Promise<ImageData> {
-    const palette = (settings.palette as PaletteName) || "BLUE-ON-TRANSPARENT";
     const filter = (settings.filter as DitherFilter) || "ordered";
     const steps = (settings.steps as number) || 11;
-    const grainSize = Math.max(
-      1,
-      Math.round((settings.grainSize as number) || 2)
-    );
-    const brightness = ((settings.brightness as number) || 0) / 100; // Convert to -1 to 1
-    const contrast = ((settings.contrast as number) || 0) / 100; // Convert to -1 to 1
-    const inputResolution = (settings.inputResolution as number) || 800;
 
-    const paletteColors = PALETTES[palette] || PALETTES["BLUE-ON-TRANSPARENT"];
+    const {
+      workingData,
+      originalWidth,
+      originalHeight,
+      paletteColors,
+      brightness,
+      contrast,
+    } = this.prepareData(imageData, settings);
 
-    // Step 1: Resize to input resolution (maintaining aspect ratio)
-    let workingData = this.resizeImage(imageData, inputResolution);
-    const originalWidth = workingData.width;
-    const originalHeight = workingData.height;
-
-    // Step 2: Downscale by grainSize factor
-    const smallWidth = Math.max(1, Math.round(originalWidth / grainSize));
-    const smallHeight = Math.max(1, Math.round(originalHeight / grainSize));
-    workingData = this.resizeImageNearest(workingData, smallWidth, smallHeight);
-
-    // Step 3: Apply brightness & contrast
+    // Apply brightness & contrast
     if (brightness !== 0 || contrast !== 0) {
       this.applyBrightnessContrast(workingData, brightness, contrast);
     }
 
-    // Step 4: Apply dithering or palette quantization
+    // Apply dithering or palette quantization
     if (filter === "ordered") {
       this.applyOrderedDither(workingData, steps, paletteColors);
     } else {
       this.applyPaletteQuantization(workingData, paletteColors);
     }
 
-    // Step 5: Scale back to original size with nearest neighbor
-    workingData = this.resizeImageNearest(
+    return this.resizeImageNearest(workingData, originalWidth, originalHeight);
+  }
+
+  // ================================================================
+  // ------------------------- PREPARE DATA --------------------------
+  // ================================================================
+
+  private prepareData(imageData: ImageData, settings: Record<string, unknown>) {
+    const palette = (settings.palette as PaletteName) || "BLUE-ON-TRANSPARENT";
+    const grainSize = Math.max(
+      1,
+      Math.round((settings.grainSize as number) || 2)
+    );
+    const brightness = ((settings.brightness as number) || 0) / 100;
+    const contrast = ((settings.contrast as number) || 0) / 100;
+    const inputResolution = (settings.inputResolution as number) || 800;
+
+    const paletteColors = PALETTES[palette] || PALETTES["BLUE-ON-TRANSPARENT"];
+
+    // Resize to input resolution
+    let workingData = this.resizeImage(imageData, inputResolution);
+    const originalWidth = workingData.width;
+    const originalHeight = workingData.height;
+
+    // Downscale by grainSize factor
+    const smallWidth = Math.max(1, Math.round(originalWidth / grainSize));
+    const smallHeight = Math.max(1, Math.round(originalHeight / grainSize));
+    workingData = this.resizeImageNearest(workingData, smallWidth, smallHeight);
+
+    return {
       workingData,
       originalWidth,
-      originalHeight
-    );
-
-    return workingData;
+      originalHeight,
+      paletteColors,
+      brightness,
+      contrast,
+    };
   }
 
   // ================================================================

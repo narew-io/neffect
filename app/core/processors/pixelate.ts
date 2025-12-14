@@ -3,19 +3,20 @@
 // ================================================================
 
 import {
-  BaseProcessImage,
+  BaseWasmProcessor,
   type ProcessorConfig,
   type ProcessorPreset,
   type SettingDefinition,
 } from "../base-processor";
+import { wasmPixelateWithColors } from "../wasm-processor";
 
-export class PixelateProcessor extends BaseProcessImage {
+export class PixelateProcessor extends BaseWasmProcessor {
   readonly config: ProcessorConfig = {
     id: "pixelate",
     name: "Pixelate",
     description: "Create retro pixelated look with customizable block size.",
     icon: "",
-    mp4support: false,
+    mp4support: true,
   };
 
   readonly presets: ProcessorPreset[] = [
@@ -26,7 +27,6 @@ export class PixelateProcessor extends BaseProcessImage {
       settings: {
         blockSize: 8,
         colorLevels: 8,
-        preserveAspect: true,
       },
     },
     {
@@ -36,7 +36,6 @@ export class PixelateProcessor extends BaseProcessImage {
       settings: {
         blockSize: 16,
         colorLevels: 256,
-        preserveAspect: true,
       },
     },
     {
@@ -46,7 +45,6 @@ export class PixelateProcessor extends BaseProcessImage {
       settings: {
         blockSize: 24,
         colorLevels: 4,
-        preserveAspect: true,
       },
     },
   ];
@@ -72,16 +70,33 @@ export class PixelateProcessor extends BaseProcessImage {
       max: 256,
       step: 1,
     },
-    {
-      id: "preserveAspect",
-      type: "checkbox",
-      label: "Preserve Aspect",
-      description: "Keep original image dimensions",
-      default: true,
-    },
   ];
 
-  async process(
+  // ================================================================
+  // ------------------------- WASM PROCESSING -----------------------
+  // ================================================================
+
+  processWasm(
+    imageData: ImageData,
+    settings: Record<string, unknown>
+  ): ImageData {
+    const blockSize = Math.max(
+      2,
+      Math.round((settings.blockSize as number) || 8)
+    );
+    const colorLevels = Math.max(
+      2,
+      Math.min(256, Math.round((settings.colorLevels as number) || 256))
+    );
+
+    return wasmPixelateWithColors(imageData, blockSize, colorLevels);
+  }
+
+  // ================================================================
+  // -------------------------- JS PROCESSING ------------------------
+  // ================================================================
+
+  async processJs(
     imageData: ImageData,
     settings: Record<string, unknown>
   ): Promise<ImageData> {
@@ -93,7 +108,6 @@ export class PixelateProcessor extends BaseProcessImage {
       2,
       Math.min(256, Math.round((settings.colorLevels as number) || 256))
     );
-    const preserveAspect = settings.preserveAspect !== false;
 
     const { width, height, data } = imageData;
 
@@ -112,7 +126,6 @@ export class PixelateProcessor extends BaseProcessImage {
           a = 0;
         let count = 0;
 
-        // Average all pixels in the block
         for (let by = 0; by < blockSize; by++) {
           for (let bx = 0; bx < blockSize; bx++) {
             const x = sx * blockSize + bx;
@@ -136,29 +149,25 @@ export class PixelateProcessor extends BaseProcessImage {
       }
     }
 
-    // Upscale back to original size if preserveAspect
-    if (preserveAspect) {
-      const result = new Uint8ClampedArray(width * height * 4);
+    // Upscale back to original size
+    const result = new Uint8ClampedArray(width * height * 4);
 
-      for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-          const sx = Math.min(Math.floor(x / blockSize), smallWidth - 1);
-          const sy = Math.min(Math.floor(y / blockSize), smallHeight - 1);
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const sx = Math.min(Math.floor(x / blockSize), smallWidth - 1);
+        const sy = Math.min(Math.floor(y / blockSize), smallHeight - 1);
 
-          const srcIdx = (sy * smallWidth + sx) * 4;
-          const dstIdx = (y * width + x) * 4;
+        const srcIdx = (sy * smallWidth + sx) * 4;
+        const dstIdx = (y * width + x) * 4;
 
-          result[dstIdx] = smallData[srcIdx];
-          result[dstIdx + 1] = smallData[srcIdx + 1];
-          result[dstIdx + 2] = smallData[srcIdx + 2];
-          result[dstIdx + 3] = smallData[srcIdx + 3];
-        }
+        result[dstIdx] = smallData[srcIdx];
+        result[dstIdx + 1] = smallData[srcIdx + 1];
+        result[dstIdx + 2] = smallData[srcIdx + 2];
+        result[dstIdx + 3] = smallData[srcIdx + 3];
       }
-
-      return new ImageData(result, width, height);
     }
 
-    return new ImageData(smallData, smallWidth, smallHeight);
+    return new ImageData(result, width, height);
   }
 
   private quantize(value: number, levels: number): number {

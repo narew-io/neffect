@@ -2,6 +2,8 @@
 // ----------------------- BASE PROCESSOR -------------------------
 // ================================================================
 
+import { initWasm, isWasmAvailable } from "./wasm-processor";
+
 export interface ProcessorConfig {
   id: string;
   name: string;
@@ -111,7 +113,7 @@ export interface BatchProgress {
 }
 
 // ================================================================
-// ---------------------- BASE PROCESSOR CLASS --------------------
+// -------------------- BASE PROCESSOR CLASS ----------------------
 // ================================================================
 
 export abstract class BaseProcessImage {
@@ -159,5 +161,90 @@ export abstract class BaseProcessImage {
       },
       {} as Record<string, unknown>
     );
+  }
+}
+
+// ================================================================
+// -------------------- BASE JS PROCESSOR -------------------------
+// ================================================================
+
+export abstract class BaseJsProcessor extends BaseProcessImage {
+  abstract processJs(
+    imageData: ImageData,
+    settings: Record<string, unknown>
+  ): Promise<ImageData>;
+
+  async process(
+    imageData: ImageData,
+    settings: Record<string, unknown>
+  ): Promise<ImageData> {
+    console.time(`JS ${this.config.id}`);
+    const result = await this.processJs(imageData, settings);
+    console.timeEnd(`JS ${this.config.id}`);
+    return result;
+  }
+}
+
+// ================================================================
+// -------------------- BASE WASM PROCESSOR -----------------------
+// ================================================================
+
+let wasmInitialized = false;
+let wasmInitPromise: Promise<boolean> | null = null;
+
+async function ensureWasmLoaded(): Promise<boolean> {
+  if (wasmInitialized) return isWasmAvailable();
+  if (!wasmInitPromise) {
+    wasmInitPromise = initWasm().then((success) => {
+      wasmInitialized = true;
+      return success;
+    });
+  }
+  return wasmInitPromise;
+}
+
+export abstract class BaseWasmProcessor extends BaseProcessImage {
+  /* WASM processing method - override this */
+  abstract processWasm(
+    imageData: ImageData,
+    settings: Record<string, unknown>
+  ): ImageData;
+
+  /* JavaScript fallback - override this */
+  abstract processJs(
+    imageData: ImageData,
+    settings: Record<string, unknown>
+  ): Promise<ImageData>;
+
+  /* Main process method - tries WASM first, falls back to JS */
+  async process(
+    imageData: ImageData,
+    settings: Record<string, unknown>
+  ): Promise<ImageData> {
+    const useWasm = await ensureWasmLoaded();
+
+    if (useWasm) {
+      try {
+        console.time(`WASM ${this.config.id}`);
+        const result = this.processWasm(imageData, settings);
+        console.timeEnd(`WASM ${this.config.id}`);
+        return result;
+      } catch (error) {
+        console.warn(
+          `WASM ${this.config.id} failed, falling back to JS:`,
+          error
+        );
+      }
+    }
+
+    console.time(`JS ${this.config.id}`);
+    const result = await this.processJs(imageData, settings);
+    console.timeEnd(`JS ${this.config.id}`);
+    return result;
+  }
+
+  /* Check if WASM is available */
+  static async isWasmReady(): Promise<boolean> {
+    return ensureWasmLoaded();
   }
 }
