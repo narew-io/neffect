@@ -45,6 +45,33 @@
     line-height: 1.4;
   }
 
+  &__support {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.2rem 0.5rem;
+    font-size: $text-xs;
+    border-radius: $radius-sm;
+    font-weight: $font-weight-medium;
+
+    &--image {
+      background: rgba($color-primary, 0.15);
+      color: $color-primary;
+    }
+
+    &--video {
+      background: rgba(#22c55e, 0.15);
+      color: #22c55e;
+    }
+  }
+
   &__arrow {
     font-size: $text-xl;
     color: $color-foreground-muted;

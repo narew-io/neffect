@@ -136,11 +136,31 @@
     overflow: hidden;
     background: $color-card;
 
-    img {
+    img,
+    video {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
+
+    &--video {
+      border: 2px solid #22c55e;
+    }
+  }
+
+  &__video-badge {
+    position: absolute;
+    top: 0.25rem;
+    left: 0.25rem;
+    padding: 0.15rem 0.35rem;
+    background: rgba(#22c55e, 0.9);
+    border-radius: $radius-sm;
+    font-size: $text-xs;
+  }
+
+  &__counts {
+    color: $color-foreground-muted;
+    font-size: $text-xs;
   }
 
   &__remove {

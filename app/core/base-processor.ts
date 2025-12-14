@@ -7,6 +7,7 @@ export interface ProcessorConfig {
   name: string;
   description: string;
   icon: string;
+  mp4support: boolean;
 }
 
 export interface ProcessorPreset {
@@ -37,6 +38,8 @@ export interface SettingDefinition {
 export interface BaseSettings {
   /** Transparency of the output image (0-100) */
   base_opacity: number;
+  /** Keep original input resolution for output */
+  keep_original_resolution: boolean;
   [key: string]: unknown;
 }
 
@@ -51,10 +54,18 @@ export const BASE_SETTINGS_DEFINITIONS: SettingDefinition[] = [
     max: 100,
     step: 1,
   },
+  {
+    id: "keep_original_resolution",
+    type: "checkbox",
+    label: "Save original resolution",
+    description: "Output will have the same resolution as the input file",
+    default: false,
+  },
 ];
 
 export const DEFAULT_BASE_SETTINGS: BaseSettings = {
   base_opacity: 100,
+  keep_original_resolution: false,
 };
 
 export function getDefaultBaseSettings(): BaseSettings {

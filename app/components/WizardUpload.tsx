@@ -4,33 +4,53 @@
 
 import { useCallback, useState } from "react";
 
+export type FileType = "image" | "video";
+
 export interface UploadedFile {
     file: File;
     preview: string;
+    type: FileType;
 }
 
 interface WizardUploadProps {
     files: UploadedFile[];
     onFilesChange: (files: UploadedFile[]) => void;
+    mp4support?: boolean;
 }
 
-export function WizardUpload({ files, onFilesChange }: WizardUploadProps) {
+const VIDEO_EXTENSIONS = ["mp4", "webm", "mov", "avi", "mkv"];
+const VIDEO_MIME_TYPES = ["video/mp4", "video/webm", "video/quicktime", "video/x-msvideo", "video/x-matroska"];
+
+export function WizardUpload({ files, onFilesChange, mp4support = false }: WizardUploadProps) {
     const [isDragging, setIsDragging] = useState(false);
     const [urlInput, setUrlInput] = useState("");
     const [isLoadingUrl, setIsLoadingUrl] = useState(false);
     const [urlError, setUrlError] = useState<string | null>(null);
 
+    const isVideoFile = (file: File): boolean => {
+        return file.type.startsWith("video/") || VIDEO_MIME_TYPES.includes(file.type);
+    };
+
+    const isImageFile = (file: File): boolean => {
+        return file.type.startsWith("image/");
+    };
+
     const handleFiles = useCallback(
         (newFiles: FileList | null) => {
             if (!newFiles) return;
-            const imageFiles = Array.from(newFiles).filter((file) => file.type.startsWith("image/"));
-            const uploadedFiles: UploadedFile[] = imageFiles.map((file) => ({
+            const validFiles = Array.from(newFiles).filter((file) => {
+                if (isImageFile(file)) return true;
+                if (mp4support && isVideoFile(file)) return true;
+                return false;
+            });
+            const uploadedFiles: UploadedFile[] = validFiles.map((file) => ({
                 file,
                 preview: URL.createObjectURL(file),
+                type: isVideoFile(file) ? "video" : "image",
             }));
             onFilesChange([...files, ...uploadedFiles]);
         },
-        [files, onFilesChange]
+        [files, onFilesChange, mp4support]
     );
 
     const handleDrop = useCallback(
@@ -75,6 +95,7 @@ export function WizardUpload({ files, onFilesChange }: WizardUploadProps) {
             const uploadedFile: UploadedFile = {
                 file,
                 preview: URL.createObjectURL(blob),
+                type: "image",
             };
 
             onFilesChange([...files, uploadedFile]);
@@ -88,8 +109,14 @@ export function WizardUpload({ files, onFilesChange }: WizardUploadProps) {
 
     return (
         <div className="wizard-upload">
-            <h2 className="wizard-upload__title">Upload Images</h2>
-            <p className="wizard-upload__subtitle">Add images from your computer or from a URL</p>
+            <h2 className="wizard-upload__title">
+                {mp4support ? "Upload Images or Videos" : "Upload Images"}
+            </h2>
+            <p className="wizard-upload__subtitle">
+                {mp4support
+                    ? "Add images or videos from your computer or from a URL"
+                    : "Add images from your computer or from a URL"}
+            </p>
 
             {/* Drop Zone */}
             <label
@@ -101,14 +128,22 @@ export function WizardUpload({ files, onFilesChange }: WizardUploadProps) {
                 <input
                     type="file"
                     multiple
-                    accept="image/*"
+                    accept={mp4support ? "image/*,video/*" : "image/*"}
                     className="upload-zone__input"
                     onChange={(e) => handleFiles(e.target.files)}
                 />
                 <div className="upload-zone__content">
                     <span className="upload-zone__icon">📁</span>
-                    <span className="upload-zone__text">Drop images here or click to browse</span>
-                    <span className="upload-zone__hint">Supports: JPG, PNG, WebP, GIF</span>
+                    <span className="upload-zone__text">
+                        {mp4support
+                            ? "Drop images or videos here or click to browse"
+                            : "Drop images here or click to browse"}
+                    </span>
+                    <span className="upload-zone__hint">
+                        {mp4support
+                            ? "Supports: JPG, PNG, WebP, GIF, MP4, WebM"
+                            : "Supports: JPG, PNG, WebP, GIF"}
+                    </span>
                 </div>
             </label>
 
@@ -142,15 +177,29 @@ export function WizardUpload({ files, onFilesChange }: WizardUploadProps) {
             {files.length > 0 && (
                 <div className="upload-preview">
                     <div className="upload-preview__header">
-                        <span>{files.length} image(s) selected</span>
+                        <span>
+                            {files.length} file(s) selected
+                            {mp4support && (
+                                <span className="upload-preview__counts">
+                                    {" "}({files.filter(f => f.type === "image").length} images, {files.filter(f => f.type === "video").length} videos)
+                                </span>
+                            )}
+                        </span>
                         <button type="button" className="btn btn--text" onClick={() => onFilesChange([])}>
                             Clear all
                         </button>
                     </div>
                     <div className="upload-preview__grid">
                         {files.map((file, index) => (
-                            <div key={index} className="upload-preview__item">
-                                <img src={file.preview} alt={file.file.name} />
+                            <div key={index} className={`upload-preview__item ${file.type === "video" ? "upload-preview__item--video" : ""}`}>
+                                {file.type === "video" ? (
+                                    <video src={file.preview} muted />
+                                ) : (
+                                    <img src={file.preview} alt={file.file.name} />
+                                )}
+                                {file.type === "video" && (
+                                    <span className="upload-preview__video-badge">🎬</span>
+                                )}
                                 <button type="button" className="upload-preview__remove" onClick={() => removeFile(index)}>
                                     ×
                                 </button>

@@ -46,6 +46,7 @@ export class DitheringProcessor extends BaseProcessImage {
     description:
       "Apply retro ordered dithering effect with customizable grain size.",
     icon: "",
+    mp4support: true,
   };
 
   readonly presets: ProcessorPreset[] = [

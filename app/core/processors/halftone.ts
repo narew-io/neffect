@@ -26,6 +26,7 @@ export class HalftoneProcessor extends BaseProcessImage {
     name: "Halftone",
     description: "Create newspaper-style dot pattern effect.",
     icon: "",
+    mp4support: false,
   };
 
   readonly presets: ProcessorPreset[] = [

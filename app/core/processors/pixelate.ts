@@ -15,6 +15,7 @@ export class PixelateProcessor extends BaseProcessImage {
     name: "Pixelate",
     description: "Create retro pixelated look with customizable block size.",
     icon: "",
+    mp4support: false,
   };
 
   readonly presets: ProcessorPreset[] = [

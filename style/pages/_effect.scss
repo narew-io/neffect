@@ -285,9 +285,24 @@
   flex-direction: column;
   gap: 0.5rem;
 
+  &--disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
   &__label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     font-size: $text-sm;
     font-weight: $font-weight-medium;
+  }
+
+  &__disabled-hint {
+    font-size: $text-xs;
+    font-weight: $font-weight-regular;
+    color: $color-foreground-muted;
+    font-style: italic;
   }
 
   &__range {
@@ -310,6 +325,15 @@
         background: $color-primary;
         border-radius: 50%;
         cursor: pointer;
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+
+        &::-webkit-slider-thumb {
+          background: $color-foreground-muted;
+        }
       }
     }
   }
@@ -339,6 +363,12 @@
       border-color: $color-primary;
     }
 
+    &:disabled {
+      cursor: not-allowed;
+      color: $color-foreground-muted;
+      background: $color-secondary;
+    }
+
     // Hide spin buttons
     &::-webkit-outer-spin-button,
     &::-webkit-inner-spin-button {
@@ -363,6 +393,61 @@
       outline: none;
       border-color: $color-primary;
     }
+  }
+
+  /* CUSTOM CHECKBOX */
+  &__checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    padding: 0.5rem 0;
+
+    input[type="checkbox"] {
+      position: relative;
+      width: 2.75rem;
+      height: 1.5rem;
+      appearance: none;
+      background: $color-secondary;
+      border-radius: $radius-full;
+      cursor: pointer;
+      transition: background $transition-fast;
+      flex-shrink: 0;
+
+      &::before {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: calc(1.5rem - 6px);
+        height: calc(1.5rem - 6px);
+        background: white;
+        border-radius: 50%;
+        transition: transform $transition-fast;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      }
+
+      &:checked {
+        background: $color-primary;
+
+        &::before {
+          transform: translateX(1.25rem);
+        }
+      }
+
+      &:hover {
+        background: rgba($color-foreground-muted, 0.3);
+      }
+
+      &:checked:hover {
+        background: darken($color-primary, 10%);
+      }
+    }
+  }
+
+  &__checkbox-label {
+    font-size: $text-sm;
+    color: $color-foreground;
   }
 }
 
@@ -415,10 +500,15 @@
 }
 
 .result-item {
+  position: relative;
   background: $color-card;
   border: 1px solid $color-border;
   border-radius: $radius-lg;
   overflow: hidden;
+
+  &--video {
+    border: 2px solid #22c55e;
+  }
 
   &__preview {
     width: 100%;
@@ -447,6 +537,17 @@
     }
   }
 
+  &__video-badge {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    background: rgba(#22c55e, 0.9);
+    border-radius: $radius-sm;
+    font-size: $text-sm;
+    z-index: 1;
+  }
+
   &__info {
     display: flex;
     justify-content: space-between;
@@ -461,6 +562,11 @@
     text-overflow: ellipsis;
     max-width: 50%;
   }
+}
+
+.process-results__breakdown {
+  font-size: $text-sm;
+  color: $color-foreground-muted;
 }
 
 // ================================================================
